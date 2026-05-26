@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { adminProcedure, router } from '../trpc'
-import { prisma } from '../../../db/prisma'  // 👈 должен быть такой импорт
+import { prisma } from '../../../db/prisma' 
 import bcrypt from 'bcrypt'
 
 export const adminRouter = router({
