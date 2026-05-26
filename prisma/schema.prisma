@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model News {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  imageUrl  String?
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  isPublished Boolean @default(true)
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id              String          @id @default(cuid())
+  email           String          @unique
+  password        String
+  name            String?
+  role            Role            @default(USER)
+  orders          Order[]
+  favoriteTickets FavoriteTicket[]
+  news News[]
+  cart            Cart? 
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  guestId   String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId, guestId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  ticketId  String
+  quantity  Int      @default(1)
+  price     Float    // Цена на момент добавления
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model FavoriteTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketId  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, ticketId])
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  isGuest   Boolean
+  guestId   String?
+  status    String
+  passengerData  PassengerData?
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  ticketId  String   
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PassengerData {
+  id             String   @id @default(cuid())
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id])
+  fullName       String
+  phone          String
+  passportNumber String?
+  email          String
+  createdAt      DateTime @default(now())
+}
